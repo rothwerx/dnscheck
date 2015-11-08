@@ -20,7 +20,7 @@ type Opts struct {
 	tSmtp        string
 }
 
-func sendemail(s Opts) int {
+func sendemail(s *Opts) int {
 	c, err := smtp.Dial(s.tSmtp)
 	if err != nil {
 		log.Fatal(err)
@@ -54,8 +54,11 @@ func main() {
 	smtpPtr := flag.String("smtp", "localhost:25", "SMTP address:port to use")
 	flag.Parse()
 
-	netaddr, _ := net.ResolveIPAddr("ip4", *hostPtr)
-	ns := Opts{
+	netaddr, err := net.ResolveIPAddr("ip4", *hostPtr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ns := &Opts{
 		email:        *emailPtr,
 		sender:       *senderPtr,
 		hostname:     *hostPtr,
@@ -64,10 +67,11 @@ func main() {
 		expectedAddr: netaddr.String(),
 	}
 
+	timefile := ".dnsdrop"
 	if ns.expectedAddr != ns.ipAddr {
 		// Send an email once when it begins to fail
-		if fl, err := os.Stat("timekeeper"); err != nil {
-			os.Create("timekeeper")
+		if fl, err := os.Stat(timefile); err != nil {
+			os.Create(timefile)
 			sendemail(ns)
 		} else {
 			// if it's still failing, send another email after an hour
@@ -78,8 +82,8 @@ func main() {
 			}
 		}
 	} else {
-		if _, err := os.Stat("timekeeper"); err == nil {
-			os.Remove("timekeeper")
+		if _, err := os.Stat(timefile); err == nil {
+			os.Remove(timefile)
 		}
 	}
 }
