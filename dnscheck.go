@@ -60,7 +60,7 @@ func main() {
 		expectedAddr: netaddr.String(),
 	}
 
-	if netaddr.String() != *ipPtr {
+	if ns.expectedAddr != ns.ipAddr {
 		fmt.Printf("%s\n", ns.expectedAddr)
 		sendemail(ns)
 	}
