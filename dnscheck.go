@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 	"net/smtp"
+	"os"
+	"time"
 )
 
 type Opts struct {
@@ -15,10 +17,11 @@ type Opts struct {
 	hostname     string
 	ipAddr       string
 	expectedAddr string
+	tSmtp        string
 }
 
 func sendemail(s Opts) int {
-	c, err := smtp.Dial("localhost:25")
+	c, err := smtp.Dial(s.tSmtp)
 	if err != nil {
 		log.Fatal(err)
 		return 1
@@ -48,21 +51,35 @@ func main() {
 	ipPtr := flag.String("ip", "216.58.216.142", "Expected IP")
 	emailPtr := flag.String("email", "", "Email address to send failures")
 	senderPtr := flag.String("sender", "example@example.com", "Email address to send as")
+	smtpPtr := flag.String("smtp", "localhost:25", "SMTP address:port to use")
 	flag.Parse()
 
 	netaddr, _ := net.ResolveIPAddr("ip4", *hostPtr)
-
 	ns := Opts{
 		email:        *emailPtr,
 		sender:       *senderPtr,
 		hostname:     *hostPtr,
 		ipAddr:       *ipPtr,
+		tSmtp:        *smtpPtr,
 		expectedAddr: netaddr.String(),
 	}
 
 	if ns.expectedAddr != ns.ipAddr {
-		fmt.Printf("%s\n", ns.expectedAddr)
-		sendemail(ns)
+		// Send an email once when it begins to fail
+		if fl, err := os.Stat("timekeeper"); err != nil {
+			os.Create("timekeeper")
+			sendemail(ns)
+		} else {
+			// if it's still failing, send another email after an hour
+			duration := time.Since(fl.ModTime())
+			since := duration.Minutes()
+			if since > 60 {
+				sendemail(ns)
+			}
+		}
+	} else {
+		if _, err := os.Stat("timekeeper"); err == nil {
+			os.Remove("timekeeper")
+		}
 	}
-
 }
