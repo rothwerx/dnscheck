@@ -20,11 +20,10 @@ type Opts struct {
 	tSmtp        string
 }
 
-func sendemail(s *Opts) int {
+func sendemail(s *Opts) {
 	c, err := smtp.Dial(s.tSmtp)
 	if err != nil {
 		log.Fatal(err)
-		return 1
 	}
 	defer c.Close()
 
@@ -33,7 +32,6 @@ func sendemail(s *Opts) int {
 	wc, err := c.Data()
 	if err != nil {
 		log.Fatal(err)
-		return 1
 	}
 	defer wc.Close()
 	ns := fmt.Sprintf("Address %s is resolving to %s\n",
@@ -41,9 +39,7 @@ func sendemail(s *Opts) int {
 	buf := bytes.NewBufferString(ns)
 	if _, err = buf.WriteTo(wc); err != nil {
 		log.Fatal(err)
-		return 1
 	}
-	return 0
 }
 
 func main() {
