@@ -67,6 +67,7 @@ func main() {
 		expectedAddr: netaddr.String(),
 	}
 
+	// To keep track of time, create a hidden file
 	timefile := ".dnsdrop"
 	if ns.expectedAddr != ns.ipAddr {
 		// Send an email once when it begins to fail
@@ -79,9 +80,16 @@ func main() {
 			since := duration.Minutes()
 			if since > 60 {
 				sendemail(ns)
+				// Reset mod time to start the 60 minute timer
+				now := time.Now().Local()
+				err := os.Chtimes(timefile, now, now)
+				if err != nil {
+					fmt.Println(err)
+				}
 			}
 		}
 	} else {
+		// Remove the file if it's no longer failing
 		if _, err := os.Stat(timefile); err == nil {
 			os.Remove(timefile)
 		}
