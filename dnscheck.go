@@ -11,17 +11,17 @@ import (
 	"time"
 )
 
-type Opts struct {
+type opts struct {
 	email        string
 	sender       string
 	hostname     string
 	ipAddr       string
 	expectedAddr string
-	tSmtp        string
+	smtp         string
 }
 
-func sendemail(s *Opts) {
-	c, err := smtp.Dial(s.tSmtp)
+func sendemail(s *opts) {
+	c, err := smtp.Dial(s.smtp)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,23 +43,23 @@ func sendemail(s *Opts) {
 }
 
 func main() {
-	hostPtr := flag.String("hostname", "google.com", "Hostname to resolve")
-	ipPtr := flag.String("ip", "216.58.216.142", "Expected IP")
-	emailPtr := flag.String("email", "", "Email address to send failures")
-	senderPtr := flag.String("sender", "example@example.com", "Email address to send as")
-	smtpPtr := flag.String("smtp", "localhost:25", "SMTP address:port to use")
+	hostname := flag.String("hostname", "google.com", "Hostname to resolve")
+	ip := flag.String("ip", "216.58.216.142", "Expected IP")
+	email := flag.String("email", "", "Email address to send failures")
+	sender := flag.String("sender", "example@example.com", "Email address to send as")
+	smtp := flag.String("smtp", "localhost:25", "SMTP address:port to use")
 	flag.Parse()
 
-	netaddr, err := net.ResolveIPAddr("ip4", *hostPtr)
+	netaddr, err := net.ResolveIPAddr("ip4", *hostname)
 	if err != nil {
 		log.Fatal(err)
 	}
-	ns := &Opts{
-		email:        *emailPtr,
-		sender:       *senderPtr,
-		hostname:     *hostPtr,
-		ipAddr:       *ipPtr,
-		tSmtp:        *smtpPtr,
+	ns := &opts{
+		email:        *email,
+		sender:       *sender,
+		hostname:     *hostname,
+		ipAddr:       *ip,
+		smtp:         *smtp,
 		expectedAddr: netaddr.String(),
 	}
 
